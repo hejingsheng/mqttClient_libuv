@@ -21,14 +21,14 @@ uv_connect_t conn;
 char sendbuf[200];
 int timeout = 100;
 
-static void onAlloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) 
+static void onAlloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 {
 	static char slab[65536];
 	buf->base = slab;
 	buf->len = sizeof(slab);
 }
 
-static void onRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) 
+static void onRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
 {
 	if (nread > 0)
 	{
@@ -77,6 +77,7 @@ static void onWrite(uv_write_t* req, int status)
 int MQTT_Send_Data(char * buf, int len)
 {
 	//need send data by tcp socket
+	memset(sendbuf, 0, sizeof(sendbuf));
 	memcpy(sendbuf, buf, len);
 	uv_write_t *req = (uv_write_t*)malloc(sizeof(uv_write_t));
 	uv_buf_t sendBuf = uv_buf_init(sendbuf, len);
@@ -105,6 +106,7 @@ int MQTT_Disconnect_Server(void)
 
 int MQTT_RecvData(mqtt_subscribe_msg_st *msg, char *data, int len)
 {
+	printf("recv topic %s data %s len %d", msg->topic, data, len);
 	return 0;
 }
 
@@ -138,12 +140,38 @@ static void cmd_thread(void *arg)
 			mqtt_global_info_st *mqttInfo;
 			async_cmd = (async_cmd_st*)malloc(sizeof(async_cmd_st));
 			mqttInfo = (mqtt_global_info_st*)malloc(sizeof(mqtt_global_info_st));
-			strcpy(mqttInfo->ser_info.mqttAddr, "120.79.19.89");
-			mqttInfo->ser_info.port = 1884;
-			strcpy(mqttInfo->login_info.name, "mqtt_manager_formal");
-			strcpy(mqttInfo->login_info.password, "1631087549");
+			strcpy(mqttInfo->ser_info.mqttAddr, "");
+			mqttInfo->ser_info.port = 1883;
+			strcpy(mqttInfo->login_info.name, "");
+			strcpy(mqttInfo->login_info.password, "");
 			async_cmd->cmd = cmd;
 			async_cmd->data = (void*)mqttInfo;
+			async->data = (void*)async_cmd;
+			uv_async_send(async);
+		}
+		else if (cmd == 2)
+		{
+			mqtt_public_st *publicInfo;
+			async_cmd = (async_cmd_st*)malloc(sizeof(async_cmd_st));
+			publicInfo = (mqtt_public_st*)malloc(sizeof(mqtt_public_st));
+			publicInfo->body = "test";
+			publicInfo->bodylen = 4;
+			publicInfo->topic = "testTopic";
+			publicInfo->qos = 0;
+			async_cmd->cmd = cmd;
+			async_cmd->data = (void*)publicInfo;
+			async->data = (void*)async_cmd;
+			uv_async_send(async);
+		}
+		else if (cmd == 3)
+		{
+			mqtt_subscribe_st *subInfo;
+			async_cmd = (async_cmd_st*)malloc(sizeof(async_cmd_st));
+			subInfo = (mqtt_subscribe_st*)malloc(sizeof(mqtt_subscribe_st));
+			subInfo->topic = "test";
+			subInfo->qos = 0;
+			async_cmd->cmd = cmd;
+			async_cmd->data = (void*)subInfo;
 			async->data = (void*)async_cmd;
 			uv_async_send(async);
 		}
@@ -153,6 +181,10 @@ static void cmd_thread(void *arg)
 static void async_callback(uv_async_t* handle)
 {
 	async_cmd_st *async_cmd = (async_cmd_st*)(handle->data);
+	if (async_cmd == NULL)
+	{
+		return;
+	}
 
 	if (async_cmd->cmd == 1)
 	{
@@ -161,6 +193,24 @@ static void async_callback(uv_async_t* handle)
 		if (mqttInfo)
 		{
 			free(mqttInfo);
+		}
+	}
+	else if (async_cmd->cmd == 2)
+	{
+		mqtt_public_st *publicInfo = (mqtt_public_st*)(async_cmd->data);
+		MQTT_Core_sm(MQTT_PUB_REQ, 0, publicInfo);
+		if (publicInfo)
+		{
+			free(publicInfo);
+		}
+	}
+	else if (async_cmd->cmd == 3)
+	{
+		mqtt_subscribe_st *subInfo = (mqtt_subscribe_st*)(async_cmd->data);
+		MQTT_Core_sm(MQTT_SUB_REQ, 0, subInfo);
+		if (subInfo)
+		{
+			free(subInfo);
 		}
 	}
 	if (async_cmd)
