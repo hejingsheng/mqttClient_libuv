@@ -77,10 +77,10 @@ static void onWrite(uv_write_t* req, int status)
 int MQTT_Send_Data(char * buf, int len)
 {
 	//need send data by tcp socket
-	memset(sendbuf, 0, sizeof(sendbuf));
-	memcpy(sendbuf, buf, len);
+	//memset(sendbuf, 0, sizeof(sendbuf));
+	//memcpy(sendbuf, buf, len);
 	uv_write_t *req = (uv_write_t*)malloc(sizeof(uv_write_t));
-	uv_buf_t sendBuf = uv_buf_init(sendbuf, len);
+	uv_buf_t sendBuf = uv_buf_init(buf, len);
 	uv_write(req, &mqttTcpClient, &sendBuf, 1, onWrite);
 	return 0;
 }
@@ -140,10 +140,10 @@ static void cmd_thread(void *arg)
 			mqtt_global_info_st *mqttInfo;
 			async_cmd = (async_cmd_st*)malloc(sizeof(async_cmd_st));
 			mqttInfo = (mqtt_global_info_st*)malloc(sizeof(mqtt_global_info_st));
-			strcpy(mqttInfo->ser_info.mqttAddr, "");
+			strcpy(mqttInfo->ser_info.mqttAddr, "120.79.19.89");
 			mqttInfo->ser_info.port = 1883;
-			strcpy(mqttInfo->login_info.name, "");
-			strcpy(mqttInfo->login_info.password, "");
+			strcpy(mqttInfo->login_info.name, "mqtt_manager_formal");
+			strcpy(mqttInfo->login_info.password, "1631087549");
 			async_cmd->cmd = cmd;
 			async_cmd->data = (void*)mqttInfo;
 			async->data = (void*)async_cmd;

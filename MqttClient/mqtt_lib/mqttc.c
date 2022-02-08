@@ -423,10 +423,11 @@ char MQTT_Core_sm(int status, uint16 ms, void* param)
 		PT_WAIT_UNTIL(&mqtt_pt, (status != MQTT_STATUS_NONE));
 		if (status == MQTT_PING_REQ)
 		{
+			printf("send ping request\n");
 			MQTT_ping();
-			PT_YIELD(&mqtt_pt);
+			status = MQTT_STATUS_NONE;
+			continue;
 		}
-		printf("current status is %d\n", status);
 		if (status == MQTT_DIS_REQ)
 		{
 			break;
