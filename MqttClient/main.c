@@ -140,10 +140,10 @@ static void cmd_thread(void *arg)
 			mqtt_global_info_st *mqttInfo;
 			async_cmd = (async_cmd_st*)malloc(sizeof(async_cmd_st));
 			mqttInfo = (mqtt_global_info_st*)malloc(sizeof(mqtt_global_info_st));
-			strcpy(mqttInfo->ser_info.mqttAddr, "120.79.19.89");
+			strcpy(mqttInfo->ser_info.mqttAddr, "");
 			mqttInfo->ser_info.port = 1883;
-			strcpy(mqttInfo->login_info.name, "mqtt_manager_formal");
-			strcpy(mqttInfo->login_info.password, "1631087549");
+			strcpy(mqttInfo->login_info.name, "");
+			strcpy(mqttInfo->login_info.password, "");
 			async_cmd->cmd = cmd;
 			async_cmd->data = (void*)mqttInfo;
 			async->data = (void*)async_cmd;
